@@ -1,0 +1,7 @@
+openai
+python-pptx
+Flask
+Werkzeug
+nltk
+contractions
+googletrans
