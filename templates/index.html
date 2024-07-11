@@ -1,0 +1,200 @@
+   <!DOCTYPE html>
+   <html lang="en">
+   <head>
+       <meta charset="UTF-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+       <title>PowerPoint Insights Extractor</title>
+       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+       <style>
+           body {
+               background-color: #e0f7fa;
+               color: #444;
+               font-family: Arial, sans-serif;
+               padding: 10px;
+               font-size: 14px;
+           }
+           .container {
+               max-width: 800px;
+               margin: 0 auto;
+               background-color: #fff;
+               padding: 20px;
+               border-radius: 8px;
+               box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+           }
+           h1 {
+               color: #00796b;
+               text-align: center;
+               margin-bottom: 30px;
+               font-size: 30px;
+           }
+           .small-heading {
+               font-size: 16px;
+               margin-top: 20px;
+               margin-bottom: 10px;
+               color: #333;
+           }
+           textarea#edi_content {
+               width: 100%;
+               height: 100px;
+               padding: 8px;
+               margin-bottom: 12px;
+               border: 1px solid #ccc;
+               border-radius: 4px;
+               box-sizing: border-box;
+               font-size: 14px;
+           }
+           input[type="text"] {
+               width: 60%;
+               padding: 8px 16px;
+               margin-bottom: 12px;
+               border: 1px solid #ccc;
+               border-radius: 4px;
+               box-sizing: border-box;
+               font-size: 14px;
+           }
+           input[type="file"] {
+               width: 100%;
+               padding: 8px;
+               margin-bottom: 12px;
+               border: 1px solid #ccc;
+               border-radius: 4px;
+               box-sizing: border-box;
+               font-size: 14px;
+           }
+           .invalid-feedback {
+               display: none;
+               color: red;
+           }
+           .is-invalid {
+               border-color: red;
+           }
+           .button-group {
+               display: flex;
+               justify-content: space-between;
+               margin-bottom: 20px;
+           }
+           .button-group button {
+               width: 48%;
+               padding: 8px;
+               border-radius: 4px;
+               font-size: 14px;
+           }
+           .btn-primary {
+               background-color: #007bff;
+               border: none;
+           }
+           .btn-primary:hover {
+               background-color: #0056b3;
+           }
+           .btn-secondary {
+               background-color: #6c757d;
+               border: none;
+           }
+           .btn-secondary:hover {
+               background-color: #5a6268;
+           }
+           .card.extracted-text {
+               background-color: #e8f5e9;
+           }
+           .card.insights {
+               background-color: #fff3e0;
+           }
+           footer {
+               text-align: center;
+               padding: 10px;
+               background-color: #f0f0f0;
+               border-top: 1px solid #ccc;
+               margin-top: 0px;
+               font-size: 12px;
+           }
+           .card {
+               margin-top: 0px;
+           }
+       </style>
+   </head>
+   <body>
+       <div class="container">
+           <h1 class="text-center">PowerPoint Insightor</h1>
+           <p class="text-center">Upload a PowerPoint file to extract text and generate insights.</p>
+           <form id="upload-form" enctype="multipart/form-data">
+               <div class="form-group">
+                   <label for="file">Choose a PowerPoint file:</label>
+                   <input type="file" class="form-control-file" id="file" name="file" accept=".ppt, .pptx" required>
+               </div>
+               <div class="button-group">
+                   <button type="submit" class="btn btn-primary">Upload</button>
+                   <button type="button" class="btn btn-secondary" onclick="clearForm('upload-form')">Clear</button>
+               </div>
+           </form>
+           <div id="loading" class="text-center" style="display:none;">
+               <div class="spinner-border text-primary" role="status">
+                   <span class="sr-only">Loading...</span>
+               </div>
+               <p>Please wait while we analyze your file...</p>
+           </div>
+           <div id="results" class="results" style="display:none;">
+               <div class="card extracted-text">
+                   <div class="card-body">
+                       <h3 class="card-title">Extracted Text</h3>
+                       <pre id="extracted-text" class="card-text p-3"></pre>
+                   </div>
+               </div>
+               <div class="card insights">
+                   <div class="card-body">
+                       <h3 class="card-title">Insights</h3>
+                       <pre id="insights" class="card-text p-3"></pre>
+                   </div>
+               </div>
+           </div>
+       </div>
+       <footer>
+           Copyright © 1996-2024 smartData Enterprises
+       </footer>
+       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        function clearForm(formId) {
+            const form = document.getElementById(formId);
+            form.reset();
+            document.querySelectorAll(`#${formId} .invalid-feedback`).forEach(el => el.style.display = 'none');
+            if (formId === 'upload-form') {
+                document.getElementById('file').value = '';
+            }
+            // Hide and clear results
+            $('#results').hide();
+            $('#extracted-text').text('');
+            $('#insights').text('');
+        }
+
+        $(document).ready(function() {
+            $('#upload-form').on('submit', function(event) {
+                event.preventDefault();
+                var formData = new FormData(this);
+
+                $('#loading').show();
+                $('#results').hide();
+
+                $.ajax({
+                    url: '/upload',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        $('#loading').hide();
+                        $('#extracted-text').text(response.extracted_text);
+                        $('#insights').text(response.insights);
+                        $('#results').show();
+                    },
+                    error: function(response) {
+                        $('#loading').hide();
+                        alert('Error: ' + response.responseJSON.error);
+                    }
+                });
+            });
+        });
+    </script>
+   </body>
+   </html>
+   
+   
+   
